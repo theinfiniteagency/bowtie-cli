@@ -8,17 +8,17 @@ $ npm install -g bowtie-cli
 
 ## Usage
 
+Pull latest Vagrant files into folder named `site-name`.
 ```
 $ bowtie new site-name
 ```
-Pull latest Vagrant files into folder named `site-name`.
 
+Start the current Vagrant box with provision, this will import the DB from Wordpress dir.
 ```
 $ bowtie up --provision
 ```
-Start the current Vagrant box with provision, this will import the DB from Wordpress dir.
 
+Stop the current Vagrant box.
 ```
 $ bowtie halt
 ```
-Stop the current Vagrant box.
