@@ -34,7 +34,7 @@ var intro_desc = '\n' +
 '                             by The Infinite Agency                             \033[0m\n' +
 '\n';
 
-program.version('0.0.3')
+program.version('0.0.4')
   .option('-p, --provision','start the box and import bowtie-wordpress.sql')
   .option('-i, --install', 'install npm packages in project')
   .option('-d, --destroy','destroy the box');
@@ -85,6 +85,7 @@ program.command('new [name]')
       console.log('\033[32mUpdating Wordpress and Vagrant URL to '+name+'.dev\033[0m');
       shell.sed('-i','bowtie-vagrant', name, 'Vagrantfile');
       shell.sed('-i','bowtie-vagrant', name, 'www/wp-content/themes/bowtie/gulpfile.js');
+      shell.sed('-i','bowtie-vagrant', name, 'www/bowtie-wordpress.sql');
       // shell.exec("sed -i '' \"/config.vm.hostname = /s/'\([^']*\)'/'bowtie-vagrant'/\" Vagrantfile")
 
       console.log('\033[35mDatabase will be imported after the box has booted.\033[0m');
