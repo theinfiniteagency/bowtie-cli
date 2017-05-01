@@ -186,7 +186,7 @@ program.command('backup')
         }
       }
 
-      shell.exec("vagrant ssh -c 'mysqldump --login-path=local wordpress > /www/bowtie-wordpress.sql'");
+      shell.exec("vagrant ssh -c 'mysqldump --login-path=local wordpress > /var/www/bowtie-wordpress.sql'");
       console.log('\033[32m🎉  Backup complete! > www/bowtie-wordpress.sql\033[0m'); //\nUse \'bowtie destroy\' to destroy the box, \nwhen you need the box again, run \'bowtie up\'
 
       if(program.destroy) {
