@@ -5,8 +5,39 @@ const program = require('commander');
 const shell = require('shelljs');
 const path = require('path');
 const fs = require('fs');
+const request = require('request');
 
-//console.log('\033[32m \033[0m');
+const Project = require('./lib/Project');
+const Config = require('./lib/Config');
+const config = new Config({
+  configName: 'bowtie',
+  defaults: {
+    deployBot: ''
+  }
+});
+
+const project = new Project({
+  defaults: {
+    name: 'New Bowtie Project',
+    slug: 'bowtie-vagrant',
+    repository_id: '',
+    environments: {
+      default: 'production',
+      staging: {
+        env_id: '',
+        url: '',
+        username: '',
+        password: ''
+      },
+      production: {
+        env_id: '',
+        url: '',
+        username: '',
+        password: ''
+      }
+    }
+  }
+});
 
 const intro =
 '\n' +
@@ -76,6 +107,9 @@ program.command('new [name]')
 
       shell.cd(name);
 
+      project.setPath(name);
+      project.set('slug', name);
+
       console.log('\033[32mPulling latest master of bowtie-wordpress\033[0m');
       shell.exec('git clone git@github.com:theinfiniteagency/bowtie-wordpress www');
 
@@ -85,7 +119,7 @@ program.command('new [name]')
       console.log('\033[32mUpdating Wordpress and Vagrant URL to '+name+'.dev\033[0m');
       shell.sed('-i','bowtie-vagrant', name, 'Vagrantfile');
       shell.sed('-i','bowtie-vagrant', name, 'www/wp-content/themes/bowtie/gulpfile.js');
-      shell.sed('-i','bowtie-vagrant', name, 'www/bowtie-wordpress.sql');
+      shell.sed('-i',/bowtie-vagrant/g, name, 'www/bowtie-wordpress.sql');
       // shell.exec("sed -i '' \"/config.vm.hostname = /s/'\([^']*\)'/'bowtie-vagrant'/\" Vagrantfile")
 
       console.log('\033[35mDatabase will be imported after the box has booted.\033[0m');
@@ -155,7 +189,7 @@ program.command('up')
       shell.exec('vagrant up');
     }
 
-    console.log('🎉  \033[32mNow serving Wordpress on .dev\033[0m');
+    console.log('🎉  \033[32mNow serving Wordpress on '+project.get('slug')+'.dev\033[0m');
     console.log('🗄  Go to :8080 to manage the DB');
   });
 
@@ -164,6 +198,214 @@ program.command('halt')
   .action(function() {
     shell.exec('vagrant halt');
   });
+
+  program.command('deploy [action]')
+    .description('deploy current project to server')
+    .action(function(action) {
+      const deployBotApiKey = config.get('deployBot');
+      let ENV, env_id = undefined;
+
+      co(function *() {
+        // Check for API Key
+        if(!deployBotApiKey) {
+          let newKey = yield prompt('\033[33mPlease enter your DeployBot API Key to continue: \033[0m');
+          if(newKey.length > 0) {
+            config.set('deployBot', newKey);
+            console.log(' \033[32mDeployBot API key saved.\033[0m');
+          } else {
+            console.log('\033[31mFailed to save key. Try again.\033[0m');
+            process.exit(1);
+          }
+        }
+
+        // No action, so deploy current if available
+        if(!action) {
+          if(isBowtieProject()) {
+
+            let repository_id = project.get('repository_id');
+            if(!repository_id) {
+              console.log('\033[31mA DeployBot Repository ID is not set in bowtie.json\033[0m');
+              process.exit(1);
+            }
+
+            let defaultEnv = project.get('environments.default');
+            // Check for Default deployment environment
+            if(!defaultEnv) {
+              console.log('\033[31mA default environment could not be found in configuration. Update bowtie.json or use `bowtie deploy ENV`\033[0m');
+              process.exit(1);
+            }
+
+            ENV = defaultEnv;
+
+            // Perform deployment on default
+            env_id = project.get('environments.'+defaultEnv+'.env_id');
+            if(env_id == undefined) {
+              console.log('\033[31mAn environment ID could not be found for '+defaultEnv+'. Update bowtie.json or use `bowtie deploy ENV`\033[0m');
+              process.exit(1);
+            }
+
+          } else {
+            console.log('\033[31mYou are not in a Bowtie project directory.\033[0m');
+            process.exit(1);
+          }
+        }
+
+        // Actions
+        if(action == 'init') {
+          let dir = process.cwd();
+          let dirName = path.basename(dir);
+          project.set('slug', dirName);
+          console.log('🎉  \033[32mBowtie project has been initalized in current directory.\033[0m');
+          process.exit(1);
+
+        } else if(action == 'list') {
+          // Action to list repositories
+          console.log('🗄  Listing Repositories');
+          let listing = yield new Promise(function(resolve, reject) {
+            request({
+              url: 'https://the-infinite-agency.deploybot.com/api/v1/repositories',
+              headers: {
+                'X-Api-Token': deployBotApiKey
+              }
+            }, function(err, res, body) {
+              return resolve(body);
+            });
+          });
+
+          let repositories = JSON.parse(listing).entries;
+          for(let e=0;e<repositories.length;e++) {
+            console.log('\033[32m'+repositories[e].id+':\033[0m '+repositories[e].title);
+          }
+
+          process.exit(1);
+        } else if(action == 'env') {
+          // Action to list environments for repository
+          if(isBowtieProject()) {
+            let repository_id = project.get('repository_id');
+            if(!repository_id) {
+              console.log('\033[31mA DeployBot Repository ID is not set in Bowtie.json\033[0m');
+              process.exit(1);
+            }
+
+            let listing = yield new Promise(function(resolve, reject) {
+              request({
+                url: 'https://the-infinite-agency.deploybot.com/api/v1/environments/?repository_id='+repository_id,
+                headers: {
+                  'X-Api-Token': deployBotApiKey
+                }
+              }, function(err, res, body) {
+                return resolve(body);
+              });
+            });
+
+            listing = JSON.parse(listing);
+            console.log('🗄  Listing Environments for this Project');
+            for(let e=0;e<listing.entries.length;e++) {
+              console.log('\033[32m'+listing.entries[e].id+':\033[0m '+listing.entries[e].name);
+            }
+
+          } else {
+            console.log('\033[31mYou are not in a Bowtie project directory.\033[0m');
+            process.exit(1);
+          }
+
+          process.exit(1);
+        } else if(action) {
+
+          // Perform deployment on provided environment
+          ENV = action;
+          env_id = project.get('environments.'+action+'.env_id');
+          if(env_id == undefined) {
+            console.log('\033[31mAn environment ID could not be found for '+action+'. Update bowtie.json or use `bowtie deploy ENV`\033[0m');
+            process.exit(1);
+          }
+        }
+
+        // Convert ENV to a number
+        env_id = Number.parseInt(env_id);
+
+        let checkEnvironment = yield new Promise(function(resolve, reject) {
+          request({
+            url: 'https://the-infinite-agency.deploybot.com/api/v1/environments/'+env_id,
+            headers: {
+              'X-Api-Token': deployBotApiKey
+            }
+          }, function(err, res, body) {
+            return resolve(body);
+          });
+        });
+
+        checkEnvironment = JSON.parse(checkEnvironment);
+
+        if(typeof checkEnvironment.message == 'string') {
+          console.log('\033[31m'+env_id+' is not a valid Environment ID for '+ENV+'.\033[0m');
+          process.exit(1);
+        }
+
+        let confirm = yield prompt.confirm('\033[33mAre you sure you would like to deploy to '+checkEnvironment.name+'? (y/n) \033[0m');
+
+        if(confirm) {
+          let deploy = yield new Promise(function(resolve, reject) {
+            request({
+              method: 'POST',
+              url: 'https://the-infinite-agency.deploybot.com/api/v1/deployments',
+              body: JSON.stringify({
+                environment_id: checkEnvironment.id
+              }),
+              headers: {
+                'X-Api-Token': deployBotApiKey
+              }
+            }, function(err, res, body) {
+              return resolve(body);
+            });
+          });
+
+          let deployment = JSON.parse(deploy);
+
+          if(deployment.id) {
+            console.log(deployment);
+            console.log('\033[32m✅  Deployment has been queued.\033[0m');
+          } else {
+            console.log('\033[31mDeployment failed.\033[0m');
+          }
+
+          process.exit(1);
+
+        } else {
+          process.exit(1);
+        }
+
+
+      }).catch(function(err) {
+        console.log(err);
+        process.exit(1);
+      });
+    });
+
+program.command('config <setting> [value]')
+  .description('set a config setting for current project')
+  .action(function(setting, value) {
+    if(isBowtieProject()) {
+      let theSetting = project.get(setting);
+      if(!theSetting && !value) {
+        console.log('\033[31mCould not find setting '+setting+'. Enter a value to set it.\033[0m');
+        process.exit(1);
+      }
+
+      if(!value) {
+        console.log(setting+': '+ theSetting);
+        process.exit(1);
+      }
+
+      project.set(setting, value);
+      console.log('✅  '+setting+': '+value);
+
+
+    } else {
+      console.log('\033[31mYou are not in a Bowtie project directory.\033[0m');
+      process.exit(1);
+    }
+  })
 
 program.command('backup')
   .description('backup the db [use -d to destroy]')
@@ -186,7 +428,7 @@ program.command('backup')
         }
       }
 
-      shell.exec("vagrant ssh -c 'mysqldump --login-path=local wordpress > /www/bowtie-wordpress.sql'");
+      shell.exec("vagrant ssh -c 'mysqldump --login-path=local wordpress > /var/www/bowtie-wordpress.sql'");
       console.log('\033[32m🎉  Backup complete! > www/bowtie-wordpress.sql\033[0m'); //\nUse \'bowtie destroy\' to destroy the box, \nwhen you need the box again, run \'bowtie up\'
 
       if(program.destroy) {
@@ -241,12 +483,42 @@ program.command('backup')
 program.command('update')
   .description('update the cli and vagrant box')
   .action(function() {
-    console.log('\033[32mUpdating vagrant box');
+    console.log('\033[32mUpdating vagrant box\033[0m');
     shell.exec('vagrant box update --box=theinfiniteagency/bowtie');
     console.log('\033[32mUpdating Bowtie CLI\033[0m');
     shell.exec('npm update -g bowtie-cli');
+
+    console.log('\033[33mChecking for WP-CLI\033[0m');
+    if(shell.test('-e', '/usr/local/bin/wp')) {
+      console.log('\033[32mUpdating WP-CLI\033[0m');
+      shell.exec('wp cli update');
+    }
+
     console.log('🎉  \033[32mBowtie updated!\033[0m');
     process.exit(1);
   });
 
+program.command('wp-cli')
+  .description('install wp-cli')
+  .action(function() {
+    console.log('Installing WP-CLI')
+    shell.cd('~/')
+    shell.exec('curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar');
+    shell.chmod('+x', 'wp-cli.phar');
+    shell.mv('-f', 'wp-cli.phar', '/usr/local/bin/wp');
+    if(!shell.error()) {
+      shell.exec('wp cli version');
+      console.log('\033[32m🎉  WP-CLI Installed \033[0m');
+    }
+
+  });
+
 program.parse(process.argv);
+
+function isBowtieProject(checkPath = process.cwd()) {
+  shell.cd(checkPath);
+  if(shell.test('-f', 'bowtie.json')) {
+    return true;
+  }
+  return false;
+}
