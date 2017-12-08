@@ -49,7 +49,7 @@ var intro_desc = '\n' +
 '                             by The Infinite Agency                             \033[0m\n' +
 '\n'
 
-program.version('0.0.8')
+program.version('0.1.0')
   .option('-p, --provision','start the box and import bowtie-wordpress.sql')
   .option('-i, --install', 'install npm packages in project')
   .option('-d, --destroy','destroy the box')
@@ -100,7 +100,7 @@ program.command('new [name]')
       console.log('\033[32mPulling latest master of Bowtie wordpress theme\033[0m')
       shell.exec('git clone git@github.com:theinfiniteagency/Bowtie www/wp-content/themes/bowtie')
 
-      console.log('\033[32mUpdating Wordpress and Vagrant URL to '+name+'.dev\033[0m')
+      console.log('\033[32mUpdating Wordpress and Vagrant URL to '+name+'.localhost\033[0m')
       shell.sed('-i','bowtie-vagrant', name, 'Vagrantfile')
 
       if(shell.test('-f', 'www/wp-content/themes/bowtie/webpack.config.js')) {
@@ -181,7 +181,7 @@ program.command('up')
       shell.exec('vagrant up')
     }
 
-    console.log('🎉  \033[32mNow serving Wordpress on '+project.get('slug')+'.dev\033[0m')
+    console.log('🎉  \033[32mNow serving Wordpress on '+project.get('slug')+'.localhost\033[0m')
     console.log('🗄  Go to :8080 to manage the DB')
   })
 
