@@ -32,7 +32,7 @@ var intro_desc = '\n' +
 '                             by The Infinite Agency                             \033[0m\n' +
 '\n'
 
-program.version('0.1.0')
+program.version('2.0.1')
 
 program.command('new [name]')
   .option('-i, --install')
