@@ -1,6 +1,6 @@
 {
   "name": "bowtie-cli",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "A command-line tool for Bowtie wordpress and vagrant",
   "main": "index.js",
   "scripts": {
@@ -20,6 +20,7 @@
     "co-prompt": "^1.0.0",
     "commander": "^2.9.0",
     "flat": "^2.0.1",
+    "prompts": "^0.1.8",
     "request": "^2.81.0",
     "shelljs": "^0.7.6"
   }

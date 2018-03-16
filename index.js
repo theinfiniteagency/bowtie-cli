@@ -5,23 +5,6 @@ const program = require('commander')
 const shell = require('shelljs')
 const path = require('path')
 const fs = require('fs')
-const request = require('request')
-
-const Project = require('./lib/Project')
-const Config = require('./lib/Config')
-const config = new Config({
-  configName: 'bowtie',
-  defaults: {
-    deployBot: ''
-  }
-})
-
-const project = new Project({
-  defaults: {
-    name: 'New Bowtie Project',
-    slug: 'bowtie-vagrant',
-  }
-})
 
 const intro =
 '\n' +
@@ -50,9 +33,6 @@ var intro_desc = '\n' +
 '\n'
 
 program.version('0.1.0')
-  .option('-p, --provision','start the box and import bowtie-wordpress.sql')
-  .option('-i, --install', 'install npm packages in project')
-  .option('-d, --destroy','destroy the box')
 
 program.command('new [name]')
   .option('-i, --install')
@@ -67,8 +47,6 @@ program.command('new [name]')
       } else {
         var name = startName
       }
-
-      // ('+dirName+')\033[0m Press return to use current name.
 
       if(name == '') {
         name = dirName
@@ -91,16 +69,13 @@ program.command('new [name]')
 
       shell.cd(name)
 
-      project.setPath(name)
-      project.set('slug', name)
-
       console.log('\033[32mPulling latest master of bowtie-wordpress\033[0m')
       shell.exec('git clone git@github.com:theinfiniteagency/bowtie-wordpress www')
 
       console.log('\033[32mPulling latest master of Bowtie wordpress theme\033[0m')
       shell.exec('git clone git@github.com:theinfiniteagency/Bowtie www/wp-content/themes/bowtie')
 
-      console.log('\033[32mUpdating Wordpress and Vagrant URL to '+name+'.localhost\033[0m')
+      console.log('\033[32mUpdating Wordpress and Vagrant URL to '+name+'.test\033[0m')
       shell.sed('-i','bowtie-vagrant', name, 'Vagrantfile')
 
       if(shell.test('-f', 'www/wp-content/themes/bowtie/webpack.config.js')) {
@@ -118,14 +93,12 @@ program.command('new [name]')
       console.log('\033[32mStarting Box\033[0m')
       shell.exec('vagrant up --provision')
 
-      if(program.install) {
-        shell.cd('www/wp-content/themes/bowtie')
-        console.log('\033[32mInstalling packages\033[0m')
-        shell.exec('npm install')
-      }
+      shell.cd('www/wp-content/themes/bowtie')
+      console.log('\033[32mInstalling packages\033[0m')
+      shell.exec('npm install')
 
       console.log('\033[32m🎉  Done! \033[0m')
-      process.exit(1)
+      process.exit(0)
     })
   })
 
@@ -161,36 +134,55 @@ program.command('static [name]')
       console.log('\033[32mPulling latest master of bowtie-static\033[0m')
       shell.exec('git clone git@github.com:theinfiniteagency/bowtie-static '+ name)
 
-      if(program.install) {
-        console.log('\033[32mInstalling packages\033[0m')
-        shell.cd(name)
-        shell.exec('npm install')
-      }
+      console.log('\033[32mInstalling packages\033[0m')
+      shell.cd(name)
+      shell.exec('npm install')
 
       console.log('\033[32m🎉  Done! \033[0m')
+      process.exit(0)
     })
   })
 
-program.command('up')
-  .option('-p, --provision','')
-  .description('start the vagrant box')
-  .action(function() {
-    if(program.provision) {
-      shell.exec('vagrant up --provision')
-    } else {
-      shell.exec('vagrant up')
-    }
+program.command('express [name]')
+  .option('-i, --install')
+  .description('create a new express.js site')
+  .action(function(startName) {
+    co(function *() {
+      var dir = process.cwd()
+      var dirName = path.basename(dir)
+      if(startName == '') {
+        var name = yield prompt('\033[32mWhat would you like to name this site?\033[0m\n')
+      } else {
+        var name = startName
+      }
 
-    console.log('🎉  \033[32mNow serving Wordpress on '+project.get('slug')+'.localhost\033[0m')
-    console.log('🗄  Go to :8080 to manage the DB')
+      if(name == '') {
+        name = dirName
+      }
+
+
+      if(!shell.test('-d', name)) {
+        console.log('\033[32m✨  Generating new express project: \033[0m' + name)
+        shell.mkdir('-p', name)
+      } else {
+        console.error('\033[31mThat folder already exists. \033[0m')
+        process.exit(1)
+      }
+
+      console.log('\033[32mConnecting to Github\033[0m')
+      shell.exec('ssh -T git@github.com')
+
+      console.log('\033[32mPulling latest master of bowtie-express\033[0m')
+      shell.exec('git clone git@github.com:theinfiniteagency/bowtie-express '+ name)
+
+      console.log('\033[32mInstalling packages\033[0m')
+      shell.cd(name)
+      shell.exec('npm install')
+
+      console.log('\033[32m🎉  Done! \033[0m')
+      process.exit(0)
+    })
   })
-
-program.command('halt')
-  .description('stop the vagrant box')
-  .action(function() {
-    shell.exec('vagrant halt')
-  })
-
 
 program.command('backup')
   .description('backup the db [use -d to destroy]')
@@ -201,7 +193,7 @@ program.command('backup')
         console.log('\033[31mCannot find a Bowtie Vagrantfile\033[0m')
         process.exit(1)
       } else if (!shell.test('-f', '.vagrant/machines/default/virtualbox/id')) {
-        console.log('\033[31mCannot find a Bowtie box\033[0m')
+        console.log('\033[31mCannot find a provisioned Bowtie box\033[0m')
         process.exit(1)
       }
 
@@ -215,11 +207,12 @@ program.command('backup')
 
       shell.exec("vagrant ssh -c 'mysqldump --login-path=local wordpress > /var/www/bowtie-wordpress.sql'")
       console.log('\033[32m🎉  Backup complete! > www/bowtie-wordpress.sql\033[0m') //\nUse \'bowtie destroy\' to destroy the box, \nwhen you need the box again, run \'bowtie up\'
-
+      console.log('You can now destroy the box to save space and use \'vagrant up\' to restore the site.')
       if(program.destroy) {
         console.log('\033[33mDestroying the box\033[0m')
         shell.exec("vagrant destroy -f")
-        console.log('\033[32m🎉  Box destroyed!\033[0m Use \'bowtie restore\' to restore the site.')
+        console.log('\033[32m🎉  Box destroyed!\033[0m Use \'vagrant up\' to restore the site.')
+        process.exit(0)
       }
 
       process.exit(1)
@@ -244,18 +237,25 @@ program.command('update')
     process.exit(1)
   })
 
-program.command('wp-cli')
-  .description('install wp-cli')
-  .action(function() {
-    console.log('Installing WP-CLI')
-    shell.cd('~/')
-    shell.exec('curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar')
-    shell.chmod('+x', 'wp-cli.phar')
-    shell.mv('-f', 'wp-cli.phar', '/usr/local/bin/wp')
-    if(!shell.error()) {
-      shell.exec('wp cli version')
-      console.log('\033[32m🎉  WP-CLI Installed \033[0m')
+program.command('install [package]')
+  .description('install useful packages')
+  .action(function(pkg) {
+
+    if(pkg == 'wp-cli') {
+      console.log('Installing WP-CLI')
+      shell.cd('~/')
+      shell.exec('curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar')
+      shell.chmod('+x', 'wp-cli.phar')
+      shell.mv('-f', 'wp-cli.phar', '/usr/local/bin/wp')
+      if(shell.error()) {
+        console.log('\033[31mError installing WP-CLI \033[0m')
+      } else {
+        shell.exec('wp cli version')
+        console.log('\033[32m🎉  WP-CLI Installed. You should see the version above. \033[0m')
+      }
     }
+
+    process.exit(0)
 
   })
 
