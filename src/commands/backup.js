@@ -17,13 +17,13 @@ class BackupCommand extends Command {
     let database, filename
     let date = + new Date()
     if(await fs.exists(path.join(currentdir, 'wp-config.php'))) {
-      let config = await fs.readFile(path.join(currentdir, 'wp-config'), 'utf8')
-      database = config.match(/\'DB_NAME\'\s*,\s*\'([a-z]+)\'/)[1]
+      let config = await fs.readFile(path.join(currentdir, 'wp-config.php'), 'utf8')
+      database = config.match(/\'DB_NAME\'\s*,\s*\'([a-z0-9\-\_]+)\'/)[1]
       filename = flags.filename ? `${flags.filename}.sql` : `bowtie-${database}-${date}.sql`
 
     } else if(await fs.exists(path.join(currentdir, 'www/wp-config.php'))) {
-      let config = await fs.readFile(path.join(currentdir, 'www/wp-config'), 'utf8')
-      database = config.match(/\'DB_NAME\'\s*,\s*\'([a-z]+)\'/)[1]
+      let config = await fs.readFile(path.join(currentdir, 'www/wp-config.php'), 'utf8')
+      database = config.match(/\'DB_NAME\'\s*,\s*\'([a-z0-9\-\_]+)\'/)[1]
       filename = flags.filename ? `${flags.filename}.sql` : `bowtie-${database}-${date}.sql`
 
     } else if(await fs.exists(path.join(currentdir, 'www'))) {
@@ -52,7 +52,7 @@ class BackupCommand extends Command {
       ])
 
       let config = await fs.readFile(path.join(currentdir, `www/${site.directory}/wp-config.php`), 'utf8')
-      database = config.match(/\'DB_NAME\'\s*,\s*\'([a-z]+)\'/)[1]
+      database = config.match(/\'DB_NAME\'\s*,\s*\'([a-z0-9\-\_]+)\'/)[1]
       filename = flags.filename ? `${site.directory}/${flags.filename}.sql` : `${site.directory}/bowtie-${database}-${date}.sql`
     }
 

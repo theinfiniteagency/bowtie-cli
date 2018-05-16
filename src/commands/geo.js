@@ -5,6 +5,7 @@ const chalk = require('chalk')
 const axios = require('axios')
 const path = require('path')
 const fs = require('fs-extra')
+const inquirer = require('inquirer')
 const Papa = require('papaparse')
 const RateLimiter = require('limiter').RateLimiter
 const Progress = require('cli-progress')

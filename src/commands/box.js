@@ -91,8 +91,8 @@ class NewCommand extends Command {
     shell.exec(`vagrant ssh -c "/var/www/${domain}/provision/provision.sh"`)
 
     this.log(chalk.gray('Cleaning up'))
-    fs.removeSync(path.join(currentdir, `www/${domain}/provision`))
-    fs.removeSync(path.join(currentdir, `www/${domain}/bowtie-wordress.sql`))
+    await fs.remove(path.join(currentdir, `${hostname}/www/${domain}/provision`))
+    await fs.remove(path.join(currentdir, `${hostname}/www/${domain}/bowtie-wordress.sql`))
     
 
     this.log(chalk.green(`🎉  Now serving ${name || 'Wordpress'} on ${domain}`))

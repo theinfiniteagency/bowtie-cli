@@ -15,7 +15,7 @@ $ npm install -g bowtie-cli
 $ bowtie COMMAND
 running command...
 $ bowtie (-v|--version|version)
-bowtie-cli/3.0.0 darwin-x64 node-v8.9.1
+bowtie-cli/3.0.1 darwin-x64 node-v8.9.1
 $ bowtie --help [COMMAND]
 USAGE
   $ bowtie COMMAND
@@ -53,7 +53,7 @@ OPTIONS
   -n, --filename=filename  [default: bowtie-{database}-{timestamp}.sql ] filename of sql export
 ```
 
-_See code: [src/commands/backup.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/backup.js)_
+_See code: [src/commands/backup.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/backup.js)_
 
 ## bowtie box ACTION HOSTNAME
 
@@ -72,7 +72,7 @@ OPTIONS
   -n, --name=name  set Wordpress site name
 ```
 
-_See code: [src/commands/box.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/box.js)_
+_See code: [src/commands/box.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/box.js)_
 
 ## bowtie config ACTION [PROPERTY] [VALUE]
 
@@ -88,7 +88,7 @@ ARGUMENTS
   VALUE     value of property if setting
 ```
 
-_See code: [src/commands/config.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/config.js)_
+_See code: [src/commands/config.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/config.js)_
 
 ## bowtie dart
 
@@ -99,7 +99,7 @@ USAGE
   $ bowtie dart
 ```
 
-_See code: [src/commands/dart.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/dart.js)_
+_See code: [src/commands/dart.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/dart.js)_
 
 ## bowtie deploy ACTION
 
@@ -120,7 +120,7 @@ OPTIONS
   -r, --revision=revision  [default: HEAD] revision id to deploy
 ```
 
-_See code: [src/commands/deploy.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/deploy.js)_
+_See code: [src/commands/deploy.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/deploy.js)_
 
 ## bowtie express ACTION NAME
 
@@ -139,7 +139,7 @@ OPTIONS
   -i, --install  install packages
 ```
 
-_See code: [src/commands/express.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/express.js)_
+_See code: [src/commands/express.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/express.js)_
 
 ## bowtie geo [ADDRESS]
 
@@ -156,7 +156,7 @@ OPTIONS
   -s, --source=source  relative path to csv to geocode, must have headings: [address, city, state, zip_code]
 ```
 
-_See code: [src/commands/geo.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/geo.js)_
+_See code: [src/commands/geo.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/geo.js)_
 
 ## bowtie git ACTION
 
@@ -170,7 +170,7 @@ ARGUMENTS
   ACTION  [default: info] action to perform
 ```
 
-_See code: [src/commands/git.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/git.js)_
+_See code: [src/commands/git.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/git.js)_
 
 ## bowtie help [COMMAND]
 
@@ -204,7 +204,7 @@ OPTIONS
   -s, --source=source  relative path to sql file directory
 ```
 
-_See code: [src/commands/restore.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/restore.js)_
+_See code: [src/commands/restore.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/restore.js)_
 
 ## bowtie site HOSTNAME
 
@@ -222,7 +222,7 @@ OPTIONS
   -n, --name=name  set Wordpress site name
 ```
 
-_See code: [src/commands/site.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/site.js)_
+_See code: [src/commands/site.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/site.js)_
 
 ## bowtie static ACTION NAME
 
@@ -241,7 +241,7 @@ OPTIONS
   -i, --install  install packages
 ```
 
-_See code: [src/commands/static.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/static.js)_
+_See code: [src/commands/static.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/static.js)_
 
 ## bowtie update
 
@@ -252,5 +252,5 @@ USAGE
   $ bowtie update
 ```
 
-_See code: [src/commands/update.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.0/src/commands/update.js)_
+_See code: [src/commands/update.js](https://github.com/theinfiniteagency/bowtie-cli/blob/v3.0.1/src/commands/update.js)_
 <!-- commandsstop -->
